@@ -1,0 +1,88 @@
+.home-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.upload-card {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+}
+
+.upload-card h1 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 28px;
+}
+
+.upload-card p {
+  margin: 0 0 30px 0;
+  color: #666;
+  font-size: 15px;
+}
+
+.upload-area {
+  margin-bottom: 20px;
+}
+
+.upload-area input[type="file"] {
+  display: none;
+}
+
+.upload-label {
+  display: block;
+  padding: 40px 20px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+  background: #fafafa;
+}
+
+.upload-label:hover {
+  border-color: #2196F3;
+  background: #f0f8ff;
+}
+
+.btn-upload, .btn-view {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 10px;
+}
+
+.btn-upload {
+  background: #2196F3;
+  color: white;
+}
+
+.btn-upload:hover:not(:disabled) {
+  background: #1976D2;
+}
+
+.btn-upload:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-view {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.btn-view:hover {
+  background: #e0e0e0;
+}
