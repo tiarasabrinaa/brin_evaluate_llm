@@ -42,7 +42,6 @@ class MessageFeedback(Base):
     tags = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    # ✅ Pastikan satu message hanya punya satu feedback
     __table_args__ = (
         UniqueConstraint('dialog_id', 'message_index', name='uix_feedback_dialog_message'),
     )
