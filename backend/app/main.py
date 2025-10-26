@@ -1,7 +1,11 @@
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+
+import csv
+from io import StringIO
 from typing import Optional, List
 import json
 import traceback
@@ -191,7 +195,6 @@ def submit_evaluation(data: EvaluationRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(evaluation)
 
-    print(f"✅ New evaluation created: ID={evaluation.id}, kualitas_keseluruhan={evaluation.kualitas_keseluruhan}")  # ✅ DEBUG
     return {
         "message": "Evaluasi berhasil disimpan",
         "id": evaluation.id,
@@ -217,7 +220,6 @@ def get_evaluation(dialog_id: str, db: Session = Depends(get_db)):
     }
 
 
-# ✅ FIXED: Ubah jadi pakai JSON body (bukan query params)
 @app.post("/feedback")
 def submit_message_feedback(data: MessageFeedbackRequest, db: Session = Depends(get_db)):
     """
@@ -232,7 +234,6 @@ def submit_message_feedback(data: MessageFeedbackRequest, db: Session = Depends(
     # Validasi dialog
     dialog = db.query(models.Dialog).filter(models.Dialog.dialog_id == data.dialog_id).first()
     if not dialog:
-        print(f"❌ Dialog not found: {data.dialog_id}")
         raise HTTPException(status_code=404, detail="Dialog tidak ditemukan")
 
     # Cek existing feedback
@@ -246,7 +247,6 @@ def submit_message_feedback(data: MessageFeedbackRequest, db: Session = Depends(
     )
 
     if existing:
-        print(f"🔄 Updating existing feedback ID: {existing.id}")
         existing.rating = data.rating
         existing.tags = data.tags or []
         db.commit()
@@ -261,12 +261,10 @@ def submit_message_feedback(data: MessageFeedbackRequest, db: Session = Depends(
             "tags": data.tags or []
         }
 
-    # ✅ Buat feedback baru (TANPA bubble_id!)
     print(f"➕ Creating new feedback")
     feedback = models.MessageFeedback(
         dialog_id=data.dialog_id,
         message_index=data.message_index,
-        # bubble_id DIHAPUS! ✅
         rating=data.rating,
         tags=data.tags or []
     )
@@ -275,14 +273,11 @@ def submit_message_feedback(data: MessageFeedbackRequest, db: Session = Depends(
         db.add(feedback)
         db.commit()
         db.refresh(feedback)
-        print(f"✅ New feedback created: ID={feedback.id}")
     except Exception as e:
-        print(f"❌ Database error: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     return {
-        "message": "✅ Feedback baru disimpan",
         "id": feedback.id,
         "dialog_id": data.dialog_id,
         "message_index": data.message_index,
@@ -301,14 +296,6 @@ def get_message_feedback(dialog_id: str, db: Session = Depends(get_db)):
             "tags": f.tags
         } for f in feedbacks
     ]
-
-import csv
-from io import StringIO
-from fastapi.responses import StreamingResponse
-
-# ==============================
-# 📥 EXPORT ENDPOINTS
-# ==============================
 
 @app.get("/export/{dialog_id}/json")
 def export_dialog_json(dialog_id: str, db: Session = Depends(get_db)):
