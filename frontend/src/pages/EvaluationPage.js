@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DialogList from '../components/DialogList';
 import DialogViewer from '../components/DialogViewer';
 import EvaluationForm from '../components/EvaluationForm';
@@ -9,24 +9,11 @@ function EvaluationPage() {
   const [dialogs, setDialogs] = useState([]);
   const [selectedDialogId, setSelectedDialogId] = useState(null);
   const [currentDialog, setCurrentDialog] = useState(null);
-  const [reactions, setReactions] = useState({}); // ✅ Tambah state reactions
+  const [reactions, setReactions] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load dialogs on mount
-  useEffect(() => {
-    loadDialogs();
-  }, []);
-
-  // Load specific dialog when selected
-  useEffect(() => {
-    if (selectedDialogId) {
-      loadDialog(selectedDialogId);
-      setReactions({}); // ✅ Reset reactions saat ganti dialog
-    }
-  }, [selectedDialogId]);
-
-  const loadDialogs = async () => {
+  const loadDialogs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,19 +30,18 @@ function EvaluationPage() {
 
       setDialogs(transformedDialogs);
 
-      // Auto-select first dialog if none selected
       if (transformedDialogs.length > 0 && !selectedDialogId) {
         setSelectedDialogId(transformedDialogs[0].dialog_id);
       }
     } catch (err) {
-      console.error('❌ Error loading dialogs:', err);
+      console.error('Error loading dialogs:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDialogId]);
 
-  const loadDialog = async (dialogId) => {
+  const loadDialog = useCallback(async (dialogId) => {
     try {
       const data = await getDialog(dialogId);
       setCurrentDialog(data);
@@ -63,7 +49,18 @@ function EvaluationPage() {
       console.error('Error loading dialog:', err);
       setError(err.message);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDialogs();
+  }, [loadDialogs]);
+
+  useEffect(() => {
+    if (selectedDialogId) {
+      loadDialog(selectedDialogId);
+      setReactions({});
+    }
+  }, [selectedDialogId, loadDialog]);
 
   const handleUploadSuccess = (result) => {
     console.log('Upload successful, refreshing dialogs...', result);
@@ -74,10 +71,9 @@ function EvaluationPage() {
   };
 
   const handleEvaluationSubmit = () => {
-    console.log('✅ Evaluation submitted');
+    console.log('Evaluation submitted');
     loadDialogs();
 
-    // Move to next pending dialog
     const currentIndex = dialogs.findIndex(d => d.dialog_id === selectedDialogId);
     const nextPending = dialogs.slice(currentIndex + 1).find(d => d.status === 'Pending');
     if (nextPending) {
@@ -147,11 +143,11 @@ function EvaluationPage() {
         <>
           <DialogViewer 
             dialog={currentDialog}
-            onReactionsChange={setReactions} // ✅ Pass callback
+            onReactionsChange={setReactions}
           />
           <EvaluationForm
             dialogId={selectedDialogId}
-            reactions={reactions} // ✅ Pass reactions
+            reactions={reactions}
             onEvaluationSubmit={handleEvaluationSubmit}
             onSkip={handleSkip}
           />
