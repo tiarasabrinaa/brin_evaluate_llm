@@ -17,8 +17,8 @@ class Evaluation(Base):
     __tablename__ = "evaluations"
     
     id = Column(Integer, primary_key=True, index=True)
-    dialog_id = Column(String, index=True)
     kualitas_keseluruhan = Column(String)
+    dialog_id = Column(String, index=True)  # ✅ Akan ditambahkan unique constraint
     koherensi = Column(Integer)
     empati = Column(Integer)
     memahami_masalah = Column(Integer)
@@ -26,6 +26,11 @@ class Evaluation(Base):
     perbaikan_emosi = Column(Integer)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # ✅ Pastikan satu dialog hanya punya satu evaluasi
+    __table_args__ = (
+        UniqueConstraint('dialog_id', name='uix_evaluation_dialog_id'),
+    )
 
 class MessageFeedback(Base):
     __tablename__ = "message_feedback"
@@ -33,10 +38,11 @@ class MessageFeedback(Base):
     id = Column(Integer, primary_key=True, index=True)
     dialog_id = Column(String, index=True)
     message_index = Column(Integer)
-    rating = Column(Integer, nullable=True)  # 1=👍, -1=👎, None=belum diberi rating
-    tags = Column(JSON, nullable=True)  # Array of strings: ["Klarifikasi", "Validasi Emosi"]
+    rating = Column(Integer, nullable=True)
+    tags = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    
+    # ✅ Pastikan satu message hanya punya satu feedback
     __table_args__ = (
-        UniqueConstraint('dialog_id', 'message_index', name='uix_dialog_message'),
+        UniqueConstraint('dialog_id', 'message_index', name='uix_feedback_dialog_message'),
     )
