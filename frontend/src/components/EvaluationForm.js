@@ -12,8 +12,16 @@ function EvaluationForm({ dialogId, reactions, onEvaluationSubmit, onSkip }) {
     perbaikan_emosi: 0,
   });
   const [notes, setNotes] = useState('');
+  const [isu, setIsu] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const availableIsu = [
+    'Faktual error',
+    'Pertanyaan berulang/Off Topic',
+    'Gaya Bahasa/Tone/Term tidak tepat',
+    '[FLAG] Respon Berbahaya/Tidak sesuai kultur Indonesia'
+  ];
 
   const metrics = [
     { key: 'koherensi', label: 'Koherensi' },
@@ -41,6 +49,7 @@ function EvaluationForm({ dialogId, reactions, onEvaluationSubmit, onSkip }) {
         perbaikan_emosi: 0,
       });
       setNotes('');
+      setIsu([]);
       
       try {
         const existing = await fetchEvaluation(dialogId);
@@ -61,6 +70,7 @@ function EvaluationForm({ dialogId, reactions, onEvaluationSubmit, onSkip }) {
           console.log('✅ Setting ratings to:', newRatings);
           setRatings(newRatings);
           setNotes(existing.notes || '');
+          setIsu(existing.isu || []);
         } else {
           console.log('⚠️ No existing evaluation found');
         }
@@ -123,6 +133,7 @@ function EvaluationForm({ dialogId, reactions, onEvaluationSubmit, onSkip }) {
         dialog_id: dialogId,
         ...ratings,
         notes: notes || null,
+        isu: isu.length > 0 ? isu : null,
       });
       
       console.log('✅ Evaluation result:', evalResult);
@@ -160,6 +171,7 @@ function EvaluationForm({ dialogId, reactions, onEvaluationSubmit, onSkip }) {
           perbaikan_emosi: saved.perbaikan_emosi || 0,
         });
         setNotes(saved.notes || '');
+        setIsu(saved.isu || []);
       }
 
       onEvaluationSubmit && onEvaluationSubmit();
@@ -227,6 +239,30 @@ function EvaluationForm({ dialogId, reactions, onEvaluationSubmit, onSkip }) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="issues-section">
+        <h4>Isu yang ditemukan</h4>
+        <div className="issues-checkboxes">
+          {availableIsu.map((issue) => (
+            <label key={issue} className="issue-checkbox">
+              <input
+                type="checkbox"
+                checked={isu.includes(issue)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setIsu([...isu, issue]);
+                  } else {
+                    setIsu(isu.filter(i => i !== issue));
+                  }
+                }}
+              />
+              <span className={issue.startsWith('[FLAG]') ? 'flag-issue' : ''}>
+                {issue}
+              </span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="notes-section">
