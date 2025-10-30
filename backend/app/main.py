@@ -39,13 +39,14 @@ class EvaluationRequest(BaseModel):
     memahami_masalah: int
     kesesuaian_intervensi: int
     perbaikan_emosi: int
+    isu: Optional[List[str]] = None
     notes: Optional[str] = None
 
 
 class MessageFeedbackRequest(BaseModel):
     dialog_id: str
     message_index: int
-    rating: Optional[int] = None  # ✅ Ubah jadi Optional
+    rating: Optional[int] = None 
     tags: Optional[List[str]] = None
 
 
@@ -158,26 +159,26 @@ def submit_evaluation(data: EvaluationRequest, db: Session = Depends(get_db)):
     existing = db.query(models.Evaluation).filter(models.Evaluation.dialog_id == data.dialog_id).first()
 
     if existing:
-        # ✅ UPDATE evaluasi yang sudah ada
+    # ✅ UPDATE evaluasi yang sudah ada
         print(f"🔄 Updating existing evaluation for {data.dialog_id}")
-        existing.kualitas_keseluruhan = data.kualitas_keseluruhan  # ✅ TAMBAHKAN INI!
+        existing.kualitas_keseluruhan = data.kualitas_keseluruhan
         existing.koherensi = data.koherensi
         existing.empati = data.empati
         existing.memahami_masalah = data.memahami_masalah
         existing.kesesuaian_intervensi = data.kesesuaian_intervensi
         existing.perbaikan_emosi = data.perbaikan_emosi
+        existing.isu = data.isu  # ✅ TAMBAHKAN INI
         existing.notes = data.notes
         
         db.commit()
         db.refresh(existing)
         
-        print(f"✅ Evaluation updated: ID={existing.id}, kualitas_keseluruhan={existing.kualitas_keseluruhan}")  # ✅ DEBUG
         return {
             "message": "Evaluasi berhasil diperbarui",
             "id": existing.id,
             "action": "updated"
         }
-    
+        
     # ✅ INSERT evaluasi baru
     print(f"➕ Creating new evaluation for {data.dialog_id}")
     evaluation = models.Evaluation(
@@ -188,6 +189,7 @@ def submit_evaluation(data: EvaluationRequest, db: Session = Depends(get_db)):
         memahami_masalah=data.memahami_masalah,
         kesesuaian_intervensi=data.kesesuaian_intervensi,
         perbaikan_emosi=data.perbaikan_emosi,
+        isu=data.isu,
         notes=data.notes
     )
     
@@ -215,6 +217,7 @@ def get_evaluation(dialog_id: str, db: Session = Depends(get_db)):
         "memahami_masalah": evaluation.memahami_masalah,
         "kesesuaian_intervensi": evaluation.kesesuaian_intervensi,
         "perbaikan_emosi": evaluation.perbaikan_emosi,
+        "isu": evaluation.isu,  # ✅ TAMBAHKAN INI
         "notes": evaluation.notes,
         "created_at": evaluation.created_at
     }
@@ -333,6 +336,7 @@ def export_dialog_json(dialog_id: str, db: Session = Depends(get_db)):
             "memahami_masalah": evaluation.memahami_masalah,
             "kesesuaian_intervensi": evaluation.kesesuaian_intervensi,
             "perbaikan_emosi": evaluation.perbaikan_emosi,
+            "isu": evaluation.isu,
             "notes": evaluation.notes,
             "created_at": evaluation.created_at.isoformat() if evaluation.created_at else None
         }
@@ -380,10 +384,11 @@ def export_dialog_csv(dialog_id: str, db: Session = Depends(get_db)):
         "Dialog ID", "Emotion", "Topic", "Scenario",
         "Message Index", "Role", "Content", "Timestamp",
         "Rating (👍=1, 👎=-1)", "Tags",
-        "Koherensi", "Empati", "Memahami Masalah", "Kesesuaian Intervensi", "Perbaikan Emosi", "Notes"
+        "Koherensi", "Empati", "Memahami Masalah", "Kesesuaian Intervensi", "Perbaikan Emosi", 
+        "Isu", "Notes"  # ✅ TAMBAHKAN "Isu"
     ])
-    
-    # Evaluation scores (same for all rows)
+
+    # Evaluation scores
     eval_scores = []
     if evaluation:
         eval_scores = [
@@ -392,10 +397,11 @@ def export_dialog_csv(dialog_id: str, db: Session = Depends(get_db)):
             evaluation.memahami_masalah,
             evaluation.kesesuaian_intervensi,
             evaluation.perbaikan_emosi,
+            ", ".join(evaluation.isu) if evaluation.isu else "",  # ✅ TAMBAHKAN INI
             evaluation.notes or ""
         ]
     else:
-        eval_scores = ["", "", "", "", "", ""]
+        eval_scores = ["", "", "", "", "", "", ""]  # ✅ TAMBAH SATU "" untuk isu
     
     # Write message rows
     for idx, msg in enumerate(dialog.messages):

@@ -239,3 +239,50 @@
   background: #ccc;
   cursor: not-allowed;
 }
+
+/* ISSUES SECTION - ADDITIONAL STYLES */
+.issues-section h4 {
+  color: #f44336;
+}
+
+.issues-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.issue-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
+  transition: opacity 0.2s;
+}
+
+.issue-checkbox:hover {
+  opacity: 0.7;
+}
+
+.issue-checkbox input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  margin: 0;
+  margin-top: 2px;
+  accent-color: #f44336;
+  flex-shrink: 0;
+}
+
+.issue-checkbox span {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.issue-checkbox .flag-issue {
+  color: #f44336;
+  font-weight: 600;
+}
+

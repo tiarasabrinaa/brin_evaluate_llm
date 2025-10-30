@@ -18,16 +18,16 @@ class Evaluation(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     kualitas_keseluruhan = Column(String)
-    dialog_id = Column(String, index=True)  # ✅ Akan ditambahkan unique constraint
+    dialog_id = Column(String, index=True)
     koherensi = Column(Integer)
     empati = Column(Integer)
     memahami_masalah = Column(Integer)
     kesesuaian_intervensi = Column(Integer)
     perbaikan_emosi = Column(Integer)
+    isu = Column(JSON, nullable=True)  # ✅ TAMBAHKAN INI
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    # ✅ Pastikan satu dialog hanya punya satu evaluasi
     __table_args__ = (
         UniqueConstraint('dialog_id', name='uix_evaluation_dialog_id'),
     )
